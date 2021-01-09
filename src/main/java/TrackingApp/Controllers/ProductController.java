@@ -1,9 +1,13 @@
 package TrackingApp.Controllers;
 
+import TrackingApp.Entities.Dto.ImageDto;
+import TrackingApp.Entities.Image;
 import TrackingApp.Entities.Product;
 import TrackingApp.Services.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 public class ProductController {
@@ -28,10 +32,15 @@ public class ProductController {
 
     @RequestMapping(value = "/product/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public Product addProduct(@PathVariable int id){
+    public Product getProduct(@PathVariable int id){
         return productService.getProductById(id);
     }
 
+    @RequestMapping(value = "/product/{product_id}/images", method = RequestMethod.GET)
+    @ResponseBody
+    public List<ImageDto> getProductImages(@PathVariable(name="product_id") int id){
+        return productService.getImageByProductId(id);
+    }
 
 
 }

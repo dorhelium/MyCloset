@@ -1,5 +1,6 @@
 package TrackingApp.Services;
 
+import TrackingApp.Entities.Dto.ImageDto;
 import TrackingApp.Entities.Image;
 import TrackingApp.Entities.Product;
 import TrackingApp.Repositories.ImageRepository;
@@ -24,7 +25,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -101,6 +104,14 @@ public class ProductService {
         }
 
         return product;
+    }
+
+    public List<ImageDto> getImageByProductId (int productId){
+        List<Image> images = imageRepository.findImagesByProductId(productId);
+        Product product = productRepository.findOne(productId);
+        return images.stream().map(image -> new ImageDto(image.getId(),
+                Base64.getEncoder().encodeToString(image.getImageData()),
+                product)).collect(Collectors.toList());
     }
 
 
