@@ -4,9 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.example</groupId>
-    <artifactId>tracker2</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <groupId>com.example</groupId>
+    <artifactId>TrackingApp</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>TrackingApp</name>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -15,25 +16,35 @@
     </parent>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>9.4-1206-jdbc42</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- scraping library -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+    <!-- scraping library -->
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>1.11.3</version>
         </dependency>
 
-        <!--
-        <dependency>
-            <groupId>org.seleniumhq.selenium</groupId>
-            <artifactId>selenium-java</artifactId>
-            <version>3.14.0</version>
-        </dependency>
-        -->
         <dependency>
             <groupId>com.github.detro.ghostdriver</groupId>
             <artifactId>phantomjsdriver</artifactId>

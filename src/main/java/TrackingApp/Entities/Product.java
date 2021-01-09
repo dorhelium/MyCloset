@@ -1,15 +1,27 @@
+package TrackingApp.Entities;
 
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
+@Entity
 public class Product {
+
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    int id;
     String url;
     String productName;
     String brand;
     float originalPrice;
     float salePrice;
-    int discountPercentage;
 
     public Product(String url) {
         this.url = url;
+    }
+
+    public Product() {
+
     }
 
     public String getUrl() {
@@ -52,11 +64,4 @@ public class Product {
         this.salePrice = salePrice;
     }
 
-    public int getDiscountPercentage() {
-        return discountPercentage;
-    }
-
-    public void setDiscountPercentage(int discountPercentage) {
-        this.discountPercentage = discountPercentage;
-    }
 }
