@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -87,8 +88,24 @@ public class ProductService {
         if (!originalPriceStr.isEmpty() && !salePriceStr.isEmpty()) {
             product.setOriginalPrice(Float.parseFloat(originalPriceStr.split(" ")[0]));
             product.setSalePrice(Float.parseFloat(salePriceStr.split(" ")[0]));
-            int discount = (int) ((product.getOriginalPrice() - product.getSalePrice()) / product.getOriginalPrice() * 100);
         }
+
+
+        ArrayList<String> sizes = new ArrayList<>();
+        ArrayList<String> availableSizes = new ArrayList<>();
+        Elements sizerepositories = doc.getElementsByClass("product-size");
+        for (Element s: sizerepositories){
+            String size = s.getElementsByClass("size-name").first().text();
+            sizes.add(size);
+            String classes = s.attr("class");
+            if (Arrays.stream(classes.split(" ")).
+                    filter(str->str.equals("disabled")).
+                    collect(Collectors.toList()).isEmpty()){
+                availableSizes.add(size);
+            }
+        }
+        product.setSizes(sizes);
+        product.setAvailableSizes(availableSizes);
 
         saveOrUpdate(product);
 
