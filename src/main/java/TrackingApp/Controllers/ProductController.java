@@ -25,8 +25,7 @@ public class ProductController {
     @RequestMapping(value = "/product", method = RequestMethod.POST)
     @ResponseBody
     public Product addProduct(@RequestBody String url){
-        Product product = productService.scrapeAndAddProduct(url);
-        return product;
+        return productService.scrapeAndAddProduct(url);
     }
 
 

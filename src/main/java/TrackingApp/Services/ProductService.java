@@ -3,10 +3,14 @@ package TrackingApp.Services;
 import TrackingApp.Entities.Dto.ImageDto;
 import TrackingApp.Entities.Image;
 import TrackingApp.Entities.Product;
+import TrackingApp.Exceptions.DataViolationException;
 import TrackingApp.Repositories.ImageRepository;
 import TrackingApp.Repositories.ProductRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.WebResponse;
+import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -23,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,11 +65,14 @@ public class ProductService {
     }
 
     public Product scrapeAndAddProduct(String url) {
+        if (!validateUrl(url)){
+            throw new DataViolationException("This URL is not valid. Please check the URL and re-enter.");
+        }
 
         WebDriver driver = new PhantomJSDriver(new DesiredCapabilities());
         driver.get(url);
 
-        WebDriverWait wait = new WebDriverWait(driver, 20);
+        WebDriverWait wait = new WebDriverWait(driver, 5);
         wait.until(ExpectedConditions.presenceOfElementLocated(By.className("price")));// instead of id u can use cssSelector or xpath of ur element.
 
         String pageSource = driver.getPageSource();
@@ -152,7 +160,22 @@ public class ProductService {
             System.out.println("Failed to download image.");
             return null;
         }
+    }
 
+    private boolean validateUrl(String link){
+        HttpURLConnection con = null;
+        try {
+            URL url = new URL(link);
+            con =  (HttpURLConnection)  url.openConnection ();
+            con.setRequestMethod ("HEAD");
+            con.connect();
+            int code = con.getResponseCode() ;
+            return (code >= 200 && code <= 299) || code == 301 || code == 302 || code == 303;
+        } catch (IOException e) {
+            return false;
+        } finally {
+            IOUtils.close(con);
+        }
     }
 
 

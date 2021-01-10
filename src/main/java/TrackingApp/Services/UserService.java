@@ -3,7 +3,7 @@ package TrackingApp.Services;
 import TrackingApp.Entities.Dto.UserItemDto;
 import TrackingApp.Entities.Item;
 import TrackingApp.Entities.UserAccount;
-import TrackingApp.Exceptions.RegistrationException;
+import TrackingApp.Exceptions.DataViolationException;
 import TrackingApp.Repositories.ItemRepository;
 import TrackingApp.Repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,15 +19,15 @@ public class UserService {
 
     public UserAccount registerNewUserAccount(UserAccount newAccount){
         if (userRepository.exists(newAccount.getUsername())){
-            throw new RegistrationException("Username '"+ newAccount.getUsername() + "' has already been used. Try another.");
+            throw new DataViolationException("Username '"+ newAccount.getUsername() + "' has already been used. Try another.");
         }
 
         if (newAccount.getPassword().length()<8) {
-            throw new RegistrationException("Password must have at least 8 characters. Try another.");
+            throw new DataViolationException("Password must have at least 8 characters. Try another.");
         }
 
         if (!userRepository.findByEmail(newAccount.getEmail()).isEmpty()) {
-            throw new RegistrationException("This email has already registered.");
+            throw new DataViolationException("This email has already registered.");
         }
 
         //TODO: send a email to confirm
@@ -53,7 +53,7 @@ public class UserService {
             userAccount = userRepository.save(userAccount);
             return userAccount;
         }else{
-            throw new RuntimeException("User does not exist.");
+            throw new DataViolationException("User does not exist.");
         }
 
     }
