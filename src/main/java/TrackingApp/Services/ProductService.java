@@ -28,6 +28,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,6 +71,27 @@ public class ProductService {
             throw new DataViolationException("This URL is not valid. Please check the URL and re-enter.");
         }
 
+        switch(getCompanyName(url)) {
+            case "zara":
+                return scrapeZara(url);
+            case "aritzia":
+                return scrapeAritzia(url);
+            default:
+                throw new DataViolationException("Sorry, we don't support this website yet. More features coming soon...");
+        }
+    }
+
+    public List<ImageDto> getImageByProductId (int productId){
+        List<Image> images = imageRepository.findImagesByProductId(productId);
+        Product product = productRepository.findOne(productId);
+        return images.stream().map(image -> new ImageDto(image.getId(),
+                Base64.getEncoder().encodeToString(image.getImageData()),
+                product)).collect(Collectors.toList());
+    }
+
+
+    private Product scrapeZara(String url) {
+
         WebDriver driver = new PhantomJSDriver(new DesiredCapabilities());
         driver.get(url);
 
@@ -88,14 +111,17 @@ public class ProductService {
         List<Product> storedProduct = productRepository.findByUrl(url);
         Product product = storedProduct.isEmpty()? new Product(url): storedProduct.get(0);
         product.setProductName(doc.title());
+        product.setBrand("ZARA");
 
         if (!priceWithoutDiscountStr.isEmpty()) {
             product.setOriginalPrice(Float.parseFloat(priceWithoutDiscountStr.split(" ")[0]));
+            product.setOnSale(false);
         }
 
         if (!originalPriceStr.isEmpty() && !salePriceStr.isEmpty()) {
             product.setOriginalPrice(Float.parseFloat(originalPriceStr.split(" ")[0]));
             product.setSalePrice(Float.parseFloat(salePriceStr.split(" ")[0]));
+            product.setOnSale(true);
         }
 
 
@@ -131,12 +157,65 @@ public class ProductService {
         return product;
     }
 
-    public List<ImageDto> getImageByProductId (int productId){
-        List<Image> images = imageRepository.findImagesByProductId(productId);
-        Product product = productRepository.findOne(productId);
-        return images.stream().map(image -> new ImageDto(image.getId(),
-                Base64.getEncoder().encodeToString(image.getImageData()),
-                product)).collect(Collectors.toList());
+    private Product scrapeAritzia(String url) {
+
+        WebDriver driver = new PhantomJSDriver(new DesiredCapabilities());
+        driver.get(url);
+
+        String pageSource = driver.getPageSource();
+        Document doc = Jsoup.parse(pageSource);
+
+        Element repository = doc.getElementsByClass("product-price").first();
+
+        String priceWithoutDiscountStr = repository.getElementsByClass("price-default").text();
+        String originalPriceStr = repository.getElementsByClass("price-standard").text();
+        String salePriceStr = repository.getElementsByClass("price-sales").text();
+
+        List<Product> storedProduct = productRepository.findByUrl(url);
+        Product product = storedProduct.isEmpty()? new Product(url): storedProduct.get(0);
+        product.setProductName(doc.title());
+        product.setBrand("ARITZIA");
+
+        if (!priceWithoutDiscountStr.isEmpty()) {
+            product.setOriginalPrice(Float.parseFloat(priceWithoutDiscountStr.substring(1)));
+            product.setOnSale(false);
+        }
+
+        if (!originalPriceStr.isEmpty() && !salePriceStr.isEmpty()) {
+            product.setOriginalPrice(Float.parseFloat(originalPriceStr.substring(1)));
+            product.setSalePrice(Float.parseFloat(salePriceStr.substring(1)));
+            product.setOnSale(true);
+        }
+
+        ArrayList<String> sizes = new ArrayList<>();
+        ArrayList<String> availableSizes = new ArrayList<>();
+
+        Element sizeHTML = doc.getElementsByClass("swatches swatches-size js-swatches__size cf mb3 mb0-ns").first();
+        Elements sizerepositories = sizeHTML.getElementsByClass("sizeanchor js-swatches__size-anchor");
+        for (Element s: sizerepositories){
+            String size = s.text();
+            sizes.add(size);
+            String availability = s.parent().attr("class");
+            if (!availability.equals(" unavailable")){
+                availableSizes.add(size);
+            }
+        }
+        product.setSizes(sizes);
+        product.setAvailableSizes(availableSizes);
+
+        product = saveOrUpdate(product);
+
+        //save all images
+        List<Image> images = imageRepository.findByProduct(product);
+        if (images.isEmpty()){
+            Elements imgs = doc.getElementsByClass("ar-product-images__image-media js-product-images__image-media lazyr lazy");
+            for (Element el : imgs) {
+                String src = el.absUrl("src");
+                getImage(src, product);
+            }
+        }
+
+        return product;
     }
 
 
@@ -177,6 +256,19 @@ public class ProductService {
             IOUtils.close(con);
         }
     }
+
+    private String getCompanyName(String url) {
+        try {
+            URI uri = new URI(url);
+            String host = uri.getHost();
+            String domain = host.startsWith("www.") ? host.substring(4) : host;
+            String company = domain.split(".com")[0];
+            return company;
+        } catch (URISyntaxException e) {
+            throw new DataViolationException("This URL is not valid. Please check the URL and re-enter.");
+        }
+    }
+
 
 
 

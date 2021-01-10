@@ -18,6 +18,7 @@ public class Product {
     String brand;
     float originalPrice;
     float salePrice;
+    boolean isOnSale;
 
     @Convert(converter = StringListConverterUtil.class)
     List<String> sizes;
@@ -95,5 +96,13 @@ public class Product {
 
     public void setAvailableSizes(List<String> availableSizes) {
         this.availableSizes = availableSizes;
+    }
+
+    public boolean isOnSale() {
+        return isOnSale;
+    }
+
+    public void setOnSale(boolean onSale) {
+        isOnSale = onSale;
     }
 }
