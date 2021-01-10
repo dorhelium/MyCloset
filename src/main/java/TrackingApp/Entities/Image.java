@@ -5,7 +5,6 @@ import javax.persistence.*;
 import java.io.Serializable;
 
 @Entity
-//@Table(name = "org_user_avatar")
 public class Image implements Serializable {
 
     private static final long serialVersionUID = -1449272493960945258L;
@@ -17,6 +16,7 @@ public class Image implements Serializable {
     private byte[] imageData;
 
     @ManyToOne
+    @JoinColumn(name="product_id")
     private Product product;
 
     public Image(byte[] imageData, Product product) {
