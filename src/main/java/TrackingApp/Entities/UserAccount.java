@@ -9,10 +9,19 @@ public class UserAccount {
     @Id
     String username;
     String password;
+    @Column(unique=true)
     String email;
 
     @OneToMany
     List<Item> wishlistItems;
+
+    public UserAccount(String username, String password, String email) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+    }
+
+    public UserAccount() { }
 
     public List<Item> getWishlistItems() {
         return wishlistItems;

@@ -12,7 +12,7 @@ public interface ImageRepository extends JpaRepository<Image, Integer> {
 
     List<Image> findByProduct(Product product);
 
-    @Query(value = "SELECT * FROM image WHERE product = :productId", nativeQuery = true)
+    @Query(value = "SELECT * FROM image WHERE product_id = :productId", nativeQuery = true)
     List<Image> findImagesByProductId(@Param("productId") int productId);
 
 
