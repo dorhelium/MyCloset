@@ -67,6 +67,7 @@ public class ProductService {
     }
 
     public Product scrapeAndAddProduct(String url) {
+        url = url.split("\\?")[0];
         if (!validateUrl(url)){
             throw new DataViolationException("This URL is not valid. Please check the URL and re-enter.");
         }
@@ -126,23 +127,34 @@ public class ProductService {
 
 
         ArrayList<String> sizes = new ArrayList<>();
-        ArrayList<String> availableSizes = new ArrayList<>();
         Elements sizerepositories = doc.getElementsByClass("product-size");
         for (Element s: sizerepositories){
             String size = s.getElementsByClass("size-name").first().text();
             sizes.add(size);
+            /*
             String classes = s.attr("class");
             if (Arrays.stream(classes.split(" ")).
                     filter(str->str.equals("disabled")).
                     collect(Collectors.toList()).isEmpty()){
                 availableSizes.add(size);
             }
+
+             */
         }
+
+        ArrayList<String> colors = new ArrayList<>();
+        Elements colorrepositories = doc.getElementsByClass("_color");
+        colors.add(doc.getElementsByClass("_colorName").first().text());
+        for (Element c: colorrepositories){
+            String color = c.text();
+            colors.add(color);
+        }
+
         product.setSizes(sizes);
-        product.setAvailableSizes(availableSizes);
+        product.setColors(colors);
+        //product.setAvailableSizes(availableSizes);
 
         saveOrUpdate(product);
-
 
         //save all images
         List<Image> images = imageRepository.findByProduct(product);
@@ -154,6 +166,7 @@ public class ProductService {
             }
         }
 
+        driver.close();
         return product;
     }
 
@@ -188,20 +201,29 @@ public class ProductService {
         }
 
         ArrayList<String> sizes = new ArrayList<>();
-        ArrayList<String> availableSizes = new ArrayList<>();
 
         Element sizeHTML = doc.getElementsByClass("swatches swatches-size js-swatches__size cf mb3 mb0-ns").first();
         Elements sizerepositories = sizeHTML.getElementsByClass("sizeanchor js-swatches__size-anchor");
         for (Element s: sizerepositories){
             String size = s.text();
             sizes.add(size);
+            /*
             String availability = s.parent().attr("class");
             if (!availability.equals(" unavailable")){
                 availableSizes.add(size);
             }
+             */
         }
         product.setSizes(sizes);
-        product.setAvailableSizes(availableSizes);
+        //product.setAvailableSizes(availableSizes);
+
+        ArrayList<String> colors = new ArrayList<>();
+        Elements colorrepositories = doc.getElementsByClass("swatchanchor");
+        for (Element c: colorrepositories){
+            String color = c.text();
+            colors.add(color);
+        }
+        product.setColors(colors);
 
         product = saveOrUpdate(product);
 
@@ -215,6 +237,7 @@ public class ProductService {
             }
         }
 
+        driver.close();
         return product;
     }
 

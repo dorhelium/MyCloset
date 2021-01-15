@@ -3,7 +3,6 @@ package TrackingApp.Entities;
 import utils.StringListConverterUtil;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -24,7 +23,7 @@ public class Product {
     List<String> sizes;
 
     @Convert(converter = StringListConverterUtil.class)
-    List<String> availableSizes;
+    List<String> colors;
 
     public Product(String url) {
         this.url = url;
@@ -90,12 +89,12 @@ public class Product {
         this.sizes = sizes;
     }
 
-    public List<String> getAvailableSizes() {
-        return availableSizes;
+    public List<String> getColors() {
+        return colors;
     }
 
-    public void setAvailableSizes(List<String> availableSizes) {
-        this.availableSizes = availableSizes;
+    public void setColors(List<String> colors) {
+        this.colors = colors;
     }
 
     public boolean isOnSale() {

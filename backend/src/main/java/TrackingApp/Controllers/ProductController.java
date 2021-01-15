@@ -28,7 +28,6 @@ public class ProductController {
         return productService.scrapeAndAddProduct(url);
     }
 
-
     @RequestMapping(value = "/product/{id}", method = RequestMethod.GET)
     @ResponseBody
     public Product getProduct(@PathVariable int id){
