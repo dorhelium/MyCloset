@@ -1,0 +1,29 @@
+// Developed by BootstrapDash (bootstrapdash.com).
+
+// Bootstrap function, vaiables and mixins
+@import "src/assets/vendors/bootstrap/scss/functions";
+@import "src/assets/vendors/bootstrap/scss/variables";
+@import "src/assets/vendors/bootstrap/scss/mixins";
+
+// Custom vaiables and fonts
+@import "src/assets/scss/components/variables";
+@import "src/assets/scss/components/font";
+
+// Bootstrap main file
+@import "src/assets/vendors/bootstrap/scss/bootstrap";
+
+
+// Components
+@import "./components//loader";
+@import "src/assets/scss/components/typography";
+@import "src/assets/scss/components/buttons";
+@import "src/assets/scss/components/header";
+@import "src/assets/scss/components/footer";
+@import "./components//landing";
+@import "src/assets/scss/components/about";
+@import "src/assets/scss/components/shop";
+@import "src/assets/scss/components/portfolio";
+@import "src/assets/scss/components/error";
+@import "src/assets/scss/components/contact";
+@import "src/assets/scss/components/blog";
+@import "src/assets/scss/components/utilities";

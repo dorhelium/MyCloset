@@ -1,0 +1,108 @@
+
+
+<header class="oleez-header">
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <a class="navbar-brand" href="index.html"><img width="200" src="assets/images/mycloset_logo.png" alt="Oleez"></a>
+    <ul class="nav nav-actions d-lg-none ml-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="#!" data-toggle="searchModal" (click)="toggleSearch()">
+          <img src="assets/images/search.svg" alt="search">
+        </a>
+      </li>
+      <li class="nav-item nav-item-cart">
+        <a class="nav-link" href="#!">
+          <span class="cart-item-count">0</span>
+          <img src="assets/images/shopping-cart.svg" alt="cart">
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#!" data-toggle="offCanvasMenu" (click)="toggleMenu()">
+          <img src="assets/images/social icon@2x.svg" alt="social-nav-toggle">
+        </a>
+      </li>
+    </ul>
+
+    <div class="collapse navbar-collapse" id="oleezMainNav">
+      <ul class="navbar-nav mx-auto mt-2 mt-lg-0">
+
+      </ul>
+      <ul class="navbar-nav d-none d-lg-flex">
+        <li class="nav-item">
+          <a class="nav-link nav-link-btn" href="#!" (click)="toggleSearch()" data-toggle="searchModal">
+            <img src="assets/images/search.svg" alt="search">
+          </a>
+        </li>
+        <li class="nav-item nav-item-cart">
+          <a class="nav-link nav-link-btn" href="#!">
+            <span class="cart-item-count">0</span>
+            <img src="assets/images/shopping-cart.svg" alt="cart">
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link pr-0 nav-link-btn" href="#!" (click)="toggleMenu()" data-toggle="offCanvasMenu">
+            <img src="assets/images/social icon@2x.svg" alt="social-nav-toggle">
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</header>
+
+<app-main-page></app-main-page>
+<app-footer></app-footer>
+
+
+<!-- Modals -->
+<!-- Off canvas social menu -->
+<nav id="offCanvasMenu" class="off-canvas-menu">
+  <button type="button" class="close" aria-label="Close" data-dismiss="offCanvasMenu">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <ul class="oleez-social-menu">
+
+    <li>
+      <a (click)="toggleLogin()" class="oleez-social-menu-link">Log In</a>
+      <form *ngIf="showLoginForm" class="register-form">
+        <div class="form-label">Email/Username:</div>
+        <input class="register-form-input" placeholder=""><br>
+
+        <div class="form-label">Password:</div>
+        <input class="register-form-input" placeholder="">
+      </form>
+    </li>
+
+    <li >
+      <a (click)="toggleRegister()" class="oleez-social-menu-link">Register</a>
+      <form *ngIf="showRegisterForm" class="register-form">
+        <div for="email" class="form-label">Email:</div>
+        <input id="email" class="register-form-input" placeholder=""><br>
+
+        <div for="email" class="form-label">Username:</div>
+        <input id="username" class="register-form-input" placeholder=""><br>
+
+        <div for="email" class="form-label">Password:</div>
+        <input id="password" class="register-form-input" placeholder="">
+      </form>
+    </li>
+
+
+  </ul>
+</nav>
+
+
+<!-- Full screen search box -->
+<div id="searchModal" class="search-modal">
+  <button type="button" class="close" aria-label="Close" data-dismiss="searchModal">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <form class="oleez-overlay-search-form">
+    <label for="search" class="sr-only">Search</label>
+    <input type="search" class="oleez-overlay-search-input" id="search" name="search" placeholder="Search here">
+  </form>
+</div>
+
+
+
+
+
+

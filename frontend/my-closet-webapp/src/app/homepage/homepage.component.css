@@ -1,0 +1,35 @@
+.register-form {
+  max-width: 250px;
+}
+
+.register-form-input {
+  border: 0;
+  background-color: transparent;
+  border-bottom: 1px solid rgba(134, 134, 134, 0.53);
+  width: 500px;
+  max-width: 100%;
+  padding: 0px 10px 5px 5px;
+  margin-bottom: 10px;
+  color: #000000;
+  line-height: 1.39;
+  font-weight: 400; }
+.register-form-input::-webkit-input-placeholder {
+  color: #000000; }
+.register-form-input::-moz-placeholder {
+  color: #000000; }
+.register-form-input::-ms-input-placeholder {
+  color: #000000; }
+.register-form-input::-ms-input-placeholder {
+  color: #000000; }
+.register-form-input::placeholder {
+  color: #000000; }
+.register-form-input:focus {
+  outline: none; }
+
+.form-label {
+  font-size: 18px;
+  color: #917682;
+  font-weight: 500;
+
+}
+
