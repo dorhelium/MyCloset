@@ -2,6 +2,24 @@
   max-width: 250px;
 }
 
+.register-form .warnning{
+  font-size: 12px;
+  color: red;
+  padding-bottom: 0;
+  margin-bottom: 0;
+
+}
+
+.hello {
+  font-size: 17px;
+  font-family: cursive;
+  display: block;
+  padding: 0.5rem 1rem; }
+.hello:hover, .hello:focus {
+  text-decoration: none;
+  cursor: default}
+
+
 .register-form-input {
   border: 0;
   background-color: transparent;
@@ -9,7 +27,6 @@
   width: 500px;
   max-width: 100%;
   padding: 0px 10px 5px 5px;
-  margin-bottom: 10px;
   color: #000000;
   line-height: 1.39;
   font-weight: 400; }
@@ -31,5 +48,33 @@
   color: #917682;
   font-weight: 500;
 
+}
+
+.button-homepage {
+  width: 200px;
+  background-color: white;
+  color: black;
+  border-radius: 5px;
+  border: 2px solid indianred;
+  margin-left: 20px;
+  margin-right: 10px;
+  margin-top: 10px;
+}
+
+.disable-background{
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: #2d2d2d;
+  opacity: 0.8;
+  z-index: 998;
+  height: 100%;
+  width: 100%;
+  color: white;
+  font-size: larger;
+  font-weight: bolder;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease-in;
 }
 

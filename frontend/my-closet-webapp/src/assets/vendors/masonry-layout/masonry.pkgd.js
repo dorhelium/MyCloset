@@ -768,7 +768,7 @@ return utils;
 }));
 
 /**
- * Outlayer Item
+ * Outlayer ItemModel
  */
 
 ( function( window, factory ) {
@@ -834,7 +834,7 @@ var vendorProperties = {
   transitionDelay: transitionProperty + 'Delay'
 };
 
-// -------------------------- Item -------------------------- //
+// -------------------------- ItemModel -------------------------- //
 
 function Item( element, layout ) {
   if ( !element ) {
@@ -2087,7 +2087,7 @@ proto.hideItemElements = function( elems ) {
 };
 
 /**
- * get Outlayer.Item, given an Element
+ * get Outlayer.ItemModel, given an Element
  * @param {Element} elem
  * @param {Function} callback
  * @returns {Outlayer.Item} item
@@ -2200,7 +2200,7 @@ Outlayer.create = function( namespace, options ) {
 
   Layout.data = Outlayer.data;
 
-  // sub-class Item
+  // sub-class ItemModel
   Layout.Item = subclass( Item );
 
   // -------------------------- declarative -------------------------- //

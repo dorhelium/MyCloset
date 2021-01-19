@@ -1,43 +1,28 @@
 package TrackingApp.Entities;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.persistence.*;
 
-@Table(uniqueConstraints= {
-        @UniqueConstraint(columnNames={"product_id", "color", "size"})}
-)
+@Getter
+@Setter
 @Entity
 public class Item {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
 
     @ManyToOne
     @JoinColumn(name="product_id")
     Product product;
+
     String color;
     String size;
+    Float addedPrice;
+    boolean availableWhenAdded;
 
-    public Product getProduct() {
-        return product;
-    }
+    boolean tracking = false;
 
-    public void setProduct(Product product) {
-        this.product = product;
-    }
-
-    public String getColor() {
-        return color;
-    }
-
-    public void setColor(String color) {
-        this.color = color;
-    }
-
-    public String getSize() {
-        return size;
-    }
-
-    public void setSize(String size) {
-        this.size = size;
-    }
 }

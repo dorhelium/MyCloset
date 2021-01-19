@@ -1,29 +1,33 @@
 package TrackingApp.Controllers;
 
-import TrackingApp.Entities.Dto.UserItemDto;
-import TrackingApp.Entities.Item;
-import TrackingApp.Entities.UserAccount;
+import TrackingApp.Entities.Dto.UserDto;
+import TrackingApp.Entities.User;
 import TrackingApp.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 @RestController
 public class UserController {
     @Autowired
     private UserService userService;
 
-    @RequestMapping(value = "/register", method = RequestMethod.POST)
-    @ResponseBody
-    public UserAccount registerNewUser(@RequestBody UserAccount newAccount){
-        UserAccount registered = userService.registerNewUserAccount(newAccount);
-        return registered;
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    @RequestMapping(value = "/register_user", method = RequestMethod.POST)
+    public UserDto registerNewUser(@RequestBody User user){
+        return userService.registerNewUser(user);
     }
 
-    @RequestMapping(value = "/addItem", method = RequestMethod.POST)
-    @ResponseBody
-    public UserAccount registerNewUser(@RequestBody UserItemDto userItemDto){
-        return userService.addNewItemToWishlist(userItemDto);
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    @RequestMapping(value = "/authenticate", method = RequestMethod.POST)
+    public User authenticarteUser(@RequestBody User user){
+        return userService.authenticateUser(user);
     }
+
+
+
+
 
 
 }

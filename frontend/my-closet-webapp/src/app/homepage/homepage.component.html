@@ -5,18 +5,17 @@
     <a class="navbar-brand" href="index.html"><img width="200" src="assets/images/mycloset_logo.png" alt="Oleez"></a>
     <ul class="nav nav-actions d-lg-none ml-auto">
       <li class="nav-item">
-        <a class="nav-link" href="#!" data-toggle="searchModal" (click)="toggleSearch()">
-          <img src="assets/images/search.svg" alt="search">
-        </a>
-      </li>
-      <li class="nav-item nav-item-cart">
-        <a class="nav-link" href="#!">
-          <span class="cart-item-count">0</span>
-          <img src="assets/images/shopping-cart.svg" alt="cart">
+        <a *ngIf="this.currentUser.username!==undefined" class="hello nav-link-btn">
+          Hello, {{this.currentUser.username}}
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#!" data-toggle="offCanvasMenu" (click)="toggleMenu()">
+        <a *ngIf="this.currentUser.username!==undefined" (click)="logout()" class="nav-link nav-item-btn">
+          Log Out
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-toggle="offCanvasMenu" (click)="toggleMenu()">
           <img src="assets/images/social icon@2x.svg" alt="social-nav-toggle">
         </a>
       </li>
@@ -28,18 +27,7 @@
       </ul>
       <ul class="navbar-nav d-none d-lg-flex">
         <li class="nav-item">
-          <a class="nav-link nav-link-btn" href="#!" (click)="toggleSearch()" data-toggle="searchModal">
-            <img src="assets/images/search.svg" alt="search">
-          </a>
-        </li>
-        <li class="nav-item nav-item-cart">
-          <a class="nav-link nav-link-btn" href="#!">
-            <span class="cart-item-count">0</span>
-            <img src="assets/images/shopping-cart.svg" alt="cart">
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link pr-0 nav-link-btn" href="#!" (click)="toggleMenu()" data-toggle="offCanvasMenu">
+          <a class="nav-link pr-0 nav-link-btn" (click)="toggleMenu()" data-toggle="offCanvasMenu">
             <img src="assets/images/social icon@2x.svg" alt="social-nav-toggle">
           </a>
         </li>
@@ -47,6 +35,39 @@
     </div>
   </nav>
 </header>
+
+<section>
+  <div class="container wow fadeIn">
+    <div id="oleezLandingCarousel" class="oleez-landing-carousel carousel slide" data-ride="carousel">
+      <div class="carousel-inner" role="listbox">
+        <div class="carousel-item active">
+          <img src="assets/images/Banner_3@2x.jpg" alt="First slide" class="w-100">
+          <div class="carousel-caption">
+            <h2 data-animation="animated fadeInRight"><span>Intentional</span></h2>
+            <h2 data-animation="animated fadeInRight"><span>Shopping</span></h2>
+            <a  class="carousel-item-link" data-animation="animated fadeInRight" (click)="toggleMenu()">JOIN TODAY</a>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <img src="assets/images/closet.jpeg" alt="Second slide" class="w-100">
+          <div class="carousel-caption">
+            <h2 data-animation="animated fadeInRight"><span>Create</span></h2>
+            <h2 data-animation="animated fadeInRight"><span>Lookbook</span></h2>
+            <a  class="carousel-item-link" data-animation="animated fadeInRight" (click)="toggleMenu()">JOIN TODAY</a>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <img src="assets/images/Banner_1@2x.jpg" alt="Third slide" class="w-100">
+          <div class="carousel-caption">
+            <h2 data-animation="animated fadeInRight"><span>Track</span></h2>
+            <h2 data-animation="animated fadeInRight"><span>Favorites</span></h2>
+            <a  class="carousel-item-link" data-animation="animated fadeInRight" (click)="toggleMenu()">JOIN TODAY</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <app-main-page></app-main-page>
 <app-footer></app-footer>
@@ -64,24 +85,53 @@
       <a (click)="toggleLogin()" class="oleez-social-menu-link">Log In</a>
       <form *ngIf="showLoginForm" class="register-form">
         <div class="form-label">Email/Username:</div>
-        <input class="register-form-input" placeholder=""><br>
+        <input class="register-form-input"
+               name="login-email"
+               [(ngModel)]="userToLogin.email"><br>
 
         <div class="form-label">Password:</div>
-        <input class="register-form-input" placeholder="">
+        <input class="register-form-input"
+               name="login-password"
+               [(ngModel)]="userToLogin.password">
+
+        <button class="button-homepage" (click)="loginUser()">Submit</button>
+        <button class="button-homepage" (click)="toggleLogin()">Cancel</button>
+
       </form>
     </li>
 
     <li >
       <a (click)="toggleRegister()" class="oleez-social-menu-link">Register</a>
       <form *ngIf="showRegisterForm" class="register-form">
-        <div for="email" class="form-label">Email:</div>
-        <input id="email" class="register-form-input" placeholder=""><br>
+        <div class="form-label">Email:</div>
+        <input type="email"
+               name="register-email"
+               class="register-form-input"
+               [(ngModel)]="userToRegister.email"
+               pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}$"
+               #emailref="ngModel">
 
-        <div for="email" class="form-label">Username:</div>
-        <input id="username" class="register-form-input" placeholder=""><br>
+        <div class="warnning">
+          <span *ngIf="emailref.errors && (emailref.touched || emailref.dirty) && checkEmail">Please enter a valid email.</span>
+          <span> &nbsp; </span>
+        </div>
 
-        <div for="email" class="form-label">Password:</div>
-        <input id="password" class="register-form-input" placeholder="">
+
+        <div class="form-label">Username:</div>
+        <input name="username"
+               class="register-form-input"
+               [(ngModel)]="userToRegister.username">
+        <div class="warnning"> &nbsp; </div>
+
+        <div class="form-label">Password:</div>
+        <input name="password"
+               class="register-form-input"
+               [(ngModel)]="userToRegister.password">
+
+
+        <button class="button-homepage" (click)="registerUser()">Submit</button>
+        <button class="button-homepage" (click)="toggleRegister()">Cancel</button>
+
       </form>
     </li>
 
@@ -90,16 +140,26 @@
 </nav>
 
 
-<!-- Full screen search box -->
-<div id="searchModal" class="search-modal">
-  <button type="button" class="close" aria-label="Close" data-dismiss="searchModal">
-    <span aria-hidden="true">&times;</span>
-  </button>
-  <form class="oleez-overlay-search-form">
-    <label for="search" class="sr-only">Search</label>
-    <input type="search" class="oleez-overlay-search-input" id="search" name="search" placeholder="Search here">
-  </form>
+<div class="disable-background" *ngIf="loadingLayer">
+  <div style="width:100%; height:100%; text-align: center; padding-top: 25%; ">Loading...</div>
 </div>
+
+<ng-template #content let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">{{this.alert.title}}</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <p>{{this.alert.text}}</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="modal.close('Close click')">Close</button>
+  </div>
+</ng-template>
+
+
 
 
 

@@ -2,27 +2,27 @@ package TrackingApp.Services;
 
 import TrackingApp.Entities.Dto.ImageDto;
 import TrackingApp.Entities.Image;
+import TrackingApp.Entities.Item;
 import TrackingApp.Entities.Product;
-import TrackingApp.Exceptions.DataViolationException;
+import TrackingApp.Exceptions.InvalidDataException;
 import TrackingApp.Repositories.ImageRepository;
 import TrackingApp.Repositories.ProductRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.WebResponse;
-import org.apache.commons.io.IOUtils;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import sun.misc.IOUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,10 +31,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,14 +42,10 @@ public class ProductService {
     private ImageRepository imageRepository;
 
 
-    public Product saveOrUpdate(Product product) {
-        productRepository.save(product);
-        return product;
-    }
 
     public Product delete(int id) {
         Product product = productRepository.getOne(id);
-        productRepository.delete(id);
+        productRepository.delete(product);
         return product;
     }
 
@@ -63,13 +56,18 @@ public class ProductService {
     }
 
     public Product getProductById(int id){
-        return productRepository.findOne(id);
+        return productRepository.findById(id).orElse(null);
     }
 
     public Product scrapeAndAddProduct(String url) {
         url = url.split("\\?")[0];
         if (!validateUrl(url)){
-            throw new DataViolationException("This URL is not valid. Please check the URL and re-enter.");
+            throw new InvalidDataException("This URL is not valid. Please check the URL and re-enter.");
+        }
+
+        List<Product> existingProduct = productRepository.findByUrl(url);
+        if (!existingProduct.isEmpty()){
+            return existingProduct.get(0);
         }
 
         switch(getCompanyName(url)) {
@@ -78,17 +76,20 @@ public class ProductService {
             case "aritzia":
                 return scrapeAritzia(url);
             default:
-                throw new DataViolationException("Sorry, we don't support this website yet. More features coming soon...");
+                throw new InvalidDataException("Sorry, we don't support this website yet. More features coming soon...");
         }
     }
 
+    /*
     public List<ImageDto> getImageByProductId (int productId){
         List<Image> images = imageRepository.findImagesByProductId(productId);
-        Product product = productRepository.findOne(productId);
+        Product product = productRepository.findById(productId).orElse(null);
         return images.stream().map(image -> new ImageDto(image.getId(),
                 Base64.getEncoder().encodeToString(image.getImageData()),
                 product)).collect(Collectors.toList());
     }
+
+     */
 
 
     private Product scrapeZara(String url) {
@@ -154,17 +155,15 @@ public class ProductService {
         product.setColors(colors);
         //product.setAvailableSizes(availableSizes);
 
-        saveOrUpdate(product);
-
         //save all images
-        List<Image> images = imageRepository.findByProduct(product);
-        if (images.isEmpty()){
-            Elements imgs = doc.getElementsByClass("image-big _img-zoom _main-image");
-            for (Element el : imgs) {
-                String src = el.absUrl("src");
-                getImage(src, product);
-            }
+        Elements imgs = doc.getElementsByClass("image-big _img-zoom _main-image");
+        for (Element el : imgs) {
+            String src = el.absUrl("src");
+            Image image = getImage(src);
+            product.getImages().add(image);
         }
+
+        product = productRepository.save(product);
 
         driver.close();
         return product;
@@ -225,24 +224,23 @@ public class ProductService {
         }
         product.setColors(colors);
 
-        product = saveOrUpdate(product);
-
         //save all images
-        List<Image> images = imageRepository.findByProduct(product);
-        if (images.isEmpty()){
-            Elements imgs = doc.getElementsByClass("ar-product-images__image-media js-product-images__image-media lazyr lazy");
-            for (Element el : imgs) {
-                String src = el.absUrl("src");
-                getImage(src, product);
-            }
+
+        Elements imgs = doc.getElementsByClass("ar-product-images__image-media js-product-images__image-media lazyr lazy");
+        for (Element el : imgs) {
+            String src = el.absUrl("src");
+            Image image = getImage(src);
+            product.getImages().add(image);
         }
+
+        product = productRepository.save(product);
 
         driver.close();
         return product;
     }
 
 
-    private Image getImage(String src, Product product) {
+    private Image getImage(String src) {
         try {
             URL url = new URL(src);
             InputStream inputStream = url.openStream();
@@ -253,11 +251,11 @@ public class ProductService {
             }
 
             byte[] imageData = byteArrayOutputStream.toByteArray();
-            Image img = new Image(imageData, product);
-            imageRepository.save(img);
+            Image img = new Image(imageData);
+            Image savedImage = imageRepository.save(img);
             inputStream.close();
             byteArrayOutputStream.close();
-            return img;
+            return savedImage;
         }catch (IOException e){
             System.out.println("Failed to download image.");
             return null;
@@ -272,11 +270,10 @@ public class ProductService {
             con.setRequestMethod ("HEAD");
             con.connect();
             int code = con.getResponseCode() ;
+            con.disconnect();
             return (code >= 200 && code <= 299) || code == 301 || code == 302 || code == 303;
         } catch (IOException e) {
             return false;
-        } finally {
-            IOUtils.close(con);
         }
     }
 
@@ -288,11 +285,9 @@ public class ProductService {
             String company = domain.split(".com")[0];
             return company;
         } catch (URISyntaxException e) {
-            throw new DataViolationException("This URL is not valid. Please check the URL and re-enter.");
+            throw new InvalidDataException("This URL is not valid. Please check the URL and re-enter.");
         }
     }
-
-
 
 
 
