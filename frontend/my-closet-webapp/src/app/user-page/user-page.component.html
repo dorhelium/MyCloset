@@ -1,0 +1,235 @@
+
+
+
+<header class="oleez-header">
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <a class="navbar-brand" href="index.html"><img width="200" src="assets/images/mycloset_logo.png" alt="Oleez"></a>
+    <ul class="nav nav-actions d-lg-none ml-auto">
+      <li class="nav-item">
+        <a *ngIf="this.currentUser!==undefined" class="hello nav-link-btn">
+          Hello, {{this.currentUser.username}}
+        </a>
+      </li>
+      <li class="nav-item">
+        <a *ngIf="this.currentUser!==undefined" (click)="logout()" class="nav-link nav-item-btn">
+          Log Out
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" (click)="open(content)">
+          <img src="assets/images/search.svg" alt="search">
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-toggle="offCanvasMenu" (click)="toggleMenu()">
+          <img src="assets/images/social icon@2x.svg" alt="social-nav-toggle">
+        </a>
+      </li>
+    </ul>
+
+
+    <div class="collapse navbar-collapse" id="oleezMainNav">
+      <ul class="navbar-nav mx-auto mt-2 mt-lg-0">
+
+      </ul>
+      <ul class="navbar-nav d-none d-lg-flex">
+        <li class="nav-item">
+          <a *ngIf="this.currentUser!==undefined" class="hello nav-link-btn">
+            Hello, {{this.currentUser.username}}
+          </a>
+        </li>
+        <li class="nav-item">
+          <a *ngIf="this.currentUser!==undefined" (click)="logout()" class="nav-link nav-item-btn">
+            Log Out
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-link-btn" (click)="open(content)">
+            <img src="assets/images/search.svg" alt="search">
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link pr-0 nav-link-btn" (click)="toggleMenu()" data-toggle="offCanvasMenu">
+            <img src="assets/images/social icon@2x.svg" alt="social-nav-toggle">
+          </a>
+        </li>
+      </ul>
+    </div>
+
+  </nav>
+</header>
+
+
+
+
+<main class="shop-page">
+  <div class="container">
+    <div class="page-header wow fadeInUp">
+      <h2 class="page-title">My Wish List</h2>
+      <p class="result-count">{{this.wishlist.items!==undefined && this.wishlist.items.length}} items</p>
+    </div>
+    <div class="row">
+
+      <div *ngFor="let item of this.wishlist.items" class="col-md-4 product-card wow fadeInUp">
+        <div  *ngIf="item.product!==undefined && item.product.images!==undefined">
+          <button (click)="deleteItem(item)" type="button" class="close" >
+            <span>&times;</span>
+          </button>
+          <div class="product-thumbnail-wrapper">
+            <img [src]="this.base64ToImage+item.product.images[0].imageData" alt="product" class="product-thumbnail">
+          </div>
+          <div style="height: 50px;">
+          <h5 class="product-title">{{item.product.productName}}</h5>
+          </div>
+          <div class="colorsize">
+            <span>Size: {{item.size}} &nbsp;&nbsp;</span>
+            <span>Color: {{item.color}}</span>
+          </div>
+          <p class="product-price" *ngIf="item.product.onSale">{{item.product.salePrice}} CAD <del>{{item.product.originalPrice}} CAD</del></p>
+          <p class="product-price" *ngIf="!item.product.onSale">{{item.product.originalPrice}} CAD</p>
+
+          <div class="btn-wrapper">
+            <button  *ngIf="!item.tracking" class="btn btn-add-to-cart" (click)="addTracking(item)">
+           Track Item
+            </button>
+            <button  *ngIf="item.tracking" class="btn cancel-add" (click)="addTracking(item)">
+            Cancel Tracking
+            </button>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div *ngIf="this.wishlist.items!==undefined && this.wishlist.items.length===0" class="no-item-container">
+      No items in your wish list yet.
+    </div>
+  </div>
+</main>
+
+<app-footer></app-footer>
+
+<!-- Modals -->
+<!-- Off canvas social menu -->
+<nav id="offCanvasMenu" class="off-canvas-menu">
+  <button type="button" class="close" aria-label="Close" data-dismiss="offCanvasMenu">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <ul class="oleez-social-menu">
+    <li>
+      <a (click)="logout()" class="oleez-social-menu-link">Log Out</a>
+    </li>
+    <li>
+      <a (click)="open(content)" class="oleez-social-menu-link">Add New Item</a>
+    </li>
+  </ul>
+</nav>
+
+
+
+<ng-template #content let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Search A Product</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <form>
+      <div class="form-group">
+
+        <label>Paste a link</label>
+        <input type="search"
+               class="form-control"
+               id="link"
+               name="search"
+               placeholder="Search here"
+               (keyup.enter)="getProduct(this.searchUrl)"
+               [(ngModel)]="searchUrl">
+
+
+        <div *ngIf="isLoading" class="info" style="margin-top: 5px">Loading product...</div>
+
+
+
+        <div *ngIf="searchedProduct">
+            <div class="image-container">
+              <div class="image-row">
+                <div *ngIf="searchedProduct.images && searchedProduct.images.length>=1" class="image-column">
+                  <img [src]="this.base64ToImage+searchedProduct.images[0].imageData"  style="width: 100%" >
+                </div>
+                <div *ngIf="searchedProduct.images && searchedProduct.images.length>=2" class="image-column">
+                  <img [src]="this.base64ToImage+searchedProduct.images[1].imageData" style="width:100%">
+                </div>
+                <div *ngIf="searchedProduct.images && searchedProduct.images.length>=3" class="image-column">
+                  <img [src]="this.base64ToImage+searchedProduct.images[2].imageData" style="width:100%">
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="info">{{searchedProduct.productName}}</div>
+              <div class="info"> Current Price:
+                <span *ngIf="searchedProduct.onSale">{{searchedProduct.salePrice}} CAD</span>
+                <span *ngIf="!searchedProduct.onSale">{{searchedProduct.originalPrice}} CAD</span>
+              </div>
+            </div>
+
+            <br>
+
+              <div ngbDropdown class="d-inline-block">
+                <div class="input-group-append">
+                  <button class="btn btn-outline-secondary btn-block" style="width: 450px" id="color" type="button" ngbDropdownToggle >
+                    <span *ngIf="this.itemToAdd.color===undefined">Choose A Color </span>
+                    <span *ngIf="this.itemToAdd.color!==undefined">Selected Color: {{this.itemToAdd.color}}</span>
+                  </button>
+                </div>
+                <div ngbDropdownMenu style="width: 450px" aria-labelledby="color">
+                  <button *ngFor="let color of searchedProduct.colors" (click)="updateColor(color)" ngbDropdownItem>{{color}}</button>
+                </div>
+              </div>
+
+          <br><br>
+
+              <div ngbDropdown class="d-inline-block">
+                <div class="input-group-append">
+                  <button class="btn btn-outline-secondary btn-block" style="width: 450px" id="size" type="button" ngbDropdownToggle >
+                    <span *ngIf="this.itemToAdd.size===undefined">Choose A Size </span>
+                    <span *ngIf="this.itemToAdd.size!==undefined">Selected Size: &nbsp;{{this.itemToAdd.size}}</span>
+                  </button>
+                </div>
+                <div ngbDropdownMenu style="width: 450px" aria-labelledby="size">
+                  <button *ngFor="let size of searchedProduct.sizes" (click)="updateSize(size)" ngbDropdownItem>{{size}}</button>
+                </div>
+              </div>
+
+        </div>
+
+      </div>
+    </form>
+  </div>
+  <div *ngIf="this.itemToAdd.size!==undefined && this.itemToAdd.color!==undefined" class="modal-footer">
+    <button type="button" class="btn btn-outline-dark" (click)="addToWishlist();modal.close('Save click');">Save</button>
+  </div>
+</ng-template>
+
+
+<ng-template #alertModel let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">{{this.alert.title}}</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <p>{{this.alert.text}}</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="modal.close('Close click')">Close</button>
+  </div>
+</ng-template>
+
+<div class="disable-background" *ngIf="this.loadinglayer">
+  <div style="width:100%; height:100%; text-align: center; padding-top: 25%;">Loading...</div>
+</div>
+
