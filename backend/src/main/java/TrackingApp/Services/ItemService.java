@@ -23,6 +23,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import utils.MailUtil;
+import utils.SendTask;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,7 +41,7 @@ public class ItemService {
     @Autowired
     private ProductRepository productRepository;
 
-    private final static Logger LOGGER = Logger.getLogger(MailUtil.class.getName());
+    private final static Logger LOGGER = Logger.getLogger(ItemService.class.getName());
 
 
     class TrackResult{
@@ -100,9 +101,10 @@ public class ItemService {
 
 
     //every day at 6pm 0 0 18 * * *
-    @Scheduled (cron = "0 0/30 * * * ?")
+    //every 30 minutes 0 0/30 * * * ?
+    @Scheduled (cron = "0 0 18 * * *")
     public void checkItemAvailability() {
-        System.out.println("Start scheduled job");
+        LOGGER.info("Start scheduled job");
         List<User> allUsers = userRepository.findAll();
 
         for (User user: allUsers){
@@ -110,27 +112,31 @@ public class ItemService {
             for (Item item: items){
                 if (item.isTracking()){
                     //track pricedrop and availability
-                    System.out.println("Start tracking item"+ item.getProduct().getProductName()+ " for user "+user.getUsername());
+                    LOGGER.info("Start tracking item"+ item.getProduct().getProductName()+ " for user "+user.getUsername());
                     TrackResult result = track(item);
-                    System.out.println("Finish tracking item"+ item.getProduct().getProductName()+ " for user "+user.getUsername()+". " +
+                    LOGGER.info("Finish tracking item"+ item.getProduct().getProductName()+ " for user "+user.getUsername()+". " +
                             "Track result: isAvailable:"+result.isAvailable+"; priceDrop:"+result.priceDrop);
 
                     if (result.isAvailable && !item.isAvailableWhenAdded()){
-                        MailUtil.sendMail(user.getEmail(), "Wish List Item Back In Stock!",
+                        SendTask sendTask = new SendTask(
+                                user.getEmail(), "Wish List Item Back In Stock!",
                                 "Hi "+user.getUsername()+",\nGood news! Your wish list item: "
                                         +item.getProduct().getProductName() + " " + item.getColor()+ " "+ item.getSize()+
                                         " is back in stock! Go check it out!");
+                        sendTask.start();
                     }
                     if (result.priceDrop){
-                        MailUtil.sendMail(user.getEmail(), "Price Drop On Wish List Item!",
+                        SendTask sendTask = new SendTask(user.getEmail(), "Price Drop On Wish List Item!",
                                 "Hi "+user.getUsername()+",\nGood news! Your wish list item: "
                                         +item.getProduct().getProductName() + " " + item.getColor()+ " "+ item.getSize()+
                                         " has a price drop! Go check it out! ");
+                        sendTask.start();
                     }
                 }
             }
 
         }
+        LOGGER.info("Scheduled job finished.");
 
     }
 
