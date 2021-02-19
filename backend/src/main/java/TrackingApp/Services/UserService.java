@@ -17,6 +17,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import utils.MailUtil;
+import utils.SendTask;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,8 +31,6 @@ public class UserService implements UserDetailsService {
 
     @Autowired
     WishlistRepository wishlistRepository;
-
-
 
 
 
@@ -66,9 +65,11 @@ public class UserService implements UserDetailsService {
         newUser.setWishlist(wishlist);
         newUser = userRepository.save(newUser);
 
-        MailUtil.sendMail(newUser.getEmail(), "Welcom To MyCloset",
+        SendTask sendTask = new SendTask(
+                newUser.getEmail(),
+                "Welcom To MyCloset",
                 "Hi there,\nWelcome to MyCloset. You want to be more intentional with shopping? We are here to help you.");
-
+        sendTask.start();
 
         return new UserDto(newUser);
     }

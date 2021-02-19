@@ -1,15 +1,18 @@
 package utils;
 
 import org.apache.log4j.Logger;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
 import javax.mail.*;
 import java.util.Properties;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+
 public class MailUtil {
 
-    static String fromEmail = "shop.my.closet.v1@gmail.com";
+    static String fromEmail = "mycloset.v1@gmail.com";
     static String fromEmailPassword = "shopmyclosetv1";
     private final static Logger LOGGER = Logger.getLogger(MailUtil.class.getName());
 
@@ -33,7 +36,7 @@ public class MailUtil {
         try {
             Message message = prepareMessage(session, recepient, subject, messageContent);
             Transport.send(message);
-            LOGGER.info("Mail was sent seccessfully to"+ recepient);
+            LOGGER.info("Mail was sent seccessfully to "+ recepient);
         } catch (Exception e) {
             e.printStackTrace();
         }

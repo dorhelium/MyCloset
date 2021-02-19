@@ -15,12 +15,6 @@ public class Image implements Serializable {
 
     private byte[] imageData;
 
-    /*
-    @ManyToOne
-    @JoinColumn(name="product_id")
-    private Product product;
-
-     */
 
     public Image(byte[] imageData) {
         this.imageData = imageData;

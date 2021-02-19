@@ -14,15 +14,12 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import sun.misc.IOUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,7 +29,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -41,35 +37,18 @@ public class ProductService {
     @Autowired
     private ImageRepository imageRepository;
 
-
-
-    public Product delete(int id) {
-        Product product = productRepository.getOne(id);
-        productRepository.delete(product);
-        return product;
-    }
-
-    public List<Product> findAll() {
-        List<Product> products = new ArrayList<>();
-        productRepository.findAll().forEach(products::add);
-        return products;
-    }
-
     public Product getProductById(int id){
         return productRepository.findById(id).orElse(null);
     }
 
     public Product scrapeAndAddProduct(String url) {
-        url = url.split("\\?")[0];
         if (!validateUrl(url)){
             throw new InvalidDataException("This URL is not valid. Please check the URL and re-enter.");
         }
-
         List<Product> existingProduct = productRepository.findByUrl(url);
         if (!existingProduct.isEmpty()){
             return existingProduct.get(0);
         }
-
         switch(getCompanyName(url)) {
             case "zara":
                 return scrapeZara(url);
@@ -80,97 +59,78 @@ public class ProductService {
         }
     }
 
-    /*
-    public List<ImageDto> getImageByProductId (int productId){
-        List<Image> images = imageRepository.findImagesByProductId(productId);
-        Product product = productRepository.findById(productId).orElse(null);
-        return images.stream().map(image -> new ImageDto(image.getId(),
-                Base64.getEncoder().encodeToString(image.getImageData()),
-                product)).collect(Collectors.toList());
-    }
-
-     */
-
 
     private Product scrapeZara(String url) {
-
         WebDriver driver = new PhantomJSDriver(new DesiredCapabilities());
         driver.get(url);
 
         WebDriverWait wait = new WebDriverWait(driver, 5);
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("price")));// instead of id u can use cssSelector or xpath of ur element.
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("price__amount")));
 
         String pageSource = driver.getPageSource();
         Document doc = Jsoup.parse(pageSource);
 
-        Elements repositories = doc.getElementsByClass("price");
-        Element repository = repositories.first();
-
-        String priceWithoutDiscountStr = repository.getElementsByClass("main-price").text();
-        String originalPriceStr = repository.getElementsByClass("line-through").text();
-        String salePriceStr = repository.getElementsByClass("sale").text();
-
+        // basic infos
         List<Product> storedProduct = productRepository.findByUrl(url);
         Product product = storedProduct.isEmpty()? new Product(url): storedProduct.get(0);
         product.setProductName(doc.title());
         product.setBrand("ZARA");
 
-        if (!priceWithoutDiscountStr.isEmpty()) {
-            product.setOriginalPrice(Float.parseFloat(priceWithoutDiscountStr.split(" ")[0]));
-            product.setOnSale(false);
-        }
-
-        if (!originalPriceStr.isEmpty() && !salePriceStr.isEmpty()) {
-            product.setOriginalPrice(Float.parseFloat(originalPriceStr.split(" ")[0]));
+        //scrape prices
+        Elements priceElements = doc.getElementsByClass("price__amount");
+        String originalPriceStr = priceElements.get(0).text();
+        String salePriceStr = priceElements.size()==2? priceElements.get(1).text():"";
+        product.setOriginalPrice(Float.parseFloat(originalPriceStr.split(" ")[0]));
+        product.setOnSale(!salePriceStr.equals(""));
+        if (product.isOnSale()){
             product.setSalePrice(Float.parseFloat(salePriceStr.split(" ")[0]));
-            product.setOnSale(true);
         }
 
-
+        // scrape sizes
+        Elements sizeElements = doc.getElementsByClass("product-size-info__name");
         ArrayList<String> sizes = new ArrayList<>();
-        Elements sizerepositories = doc.getElementsByClass("product-size");
-        for (Element s: sizerepositories){
-            String size = s.getElementsByClass("size-name").first().text();
+        for (Element s: sizeElements){
+            String size = s.text();
             sizes.add(size);
-            /*
-            String classes = s.attr("class");
-            if (Arrays.stream(classes.split(" ")).
-                    filter(str->str.equals("disabled")).
-                    collect(Collectors.toList()).isEmpty()){
-                availableSizes.add(size);
-            }
-
-             */
         }
+        product.setSizes(sizes);
 
+        //scrape colors
         ArrayList<String> colors = new ArrayList<>();
-        Elements colorrepositories = doc.getElementsByClass("_color");
-        colors.add(doc.getElementsByClass("_colorName").first().text());
-        for (Element c: colorrepositories){
+        Elements colorElements = doc.getElementsByClass("product-detail-info-color-selector__color-button");
+        for (Element c: colorElements){
             String color = c.text();
             colors.add(color);
         }
 
-        product.setSizes(sizes);
+        Elements defaultColorElement = doc.getElementsByClass("product-detail-info__color");
+        if (defaultColorElement.size()>0){
+            String defaultColor = defaultColorElement.first().text().split(" ")[1];
+            if (colors.size()==0){
+                colors.add(defaultColor);
+            }
+        }
         product.setColors(colors);
-        //product.setAvailableSizes(availableSizes);
 
-        //save all images
-        Elements imgs = doc.getElementsByClass("image-big _img-zoom _main-image");
-        for (Element el : imgs) {
-            String src = el.absUrl("src");
-            Image image = getImage(src);
-            product.getImages().add(image);
+        //scrape images
+        Elements elements = doc.getElementsByClass("media-image__image media__wrapper--media");
+        Elements productImageElements = doc.getElementsByClass("product-detail-images__images");
+        if (productImageElements.size()>0) {
+            Elements imageElements = productImageElements.get(0).getElementsByClass("media-image__image media__wrapper--media");
+            for (Element element : imageElements) {
+                String src = element.absUrl("src");
+                Image image = getImage(src);
+                product.getImages().add(image);
+            }
         }
 
         product = productRepository.save(product);
-
         driver.close();
         return product;
     }
 
-    private Product scrapeAritzia(String url) {
 
+    private Product scrapeAritzia(String url) {
         WebDriver driver = new PhantomJSDriver(new DesiredCapabilities());
         driver.get(url);
 
@@ -179,43 +139,38 @@ public class ProductService {
 
         Element repository = doc.getElementsByClass("product-price").first();
 
-        String priceWithoutDiscountStr = repository.getElementsByClass("price-default").text();
-        String originalPriceStr = repository.getElementsByClass("price-standard").text();
-        String salePriceStr = repository.getElementsByClass("price-sales").text();
-
+       //basic info
         List<Product> storedProduct = productRepository.findByUrl(url);
         Product product = storedProduct.isEmpty()? new Product(url): storedProduct.get(0);
         product.setProductName(doc.title());
         product.setBrand("ARITZIA");
 
+        //scrape prices
+        String priceWithoutDiscountStr = repository.getElementsByClass("price-default").text();
+        String originalPriceStr = repository.getElementsByClass("price-standard").text();
+        String salePriceStr = repository.getElementsByClass("price-sales").text();
+
         if (!priceWithoutDiscountStr.isEmpty()) {
             product.setOriginalPrice(Float.parseFloat(priceWithoutDiscountStr.substring(1)));
             product.setOnSale(false);
         }
-
         if (!originalPriceStr.isEmpty() && !salePriceStr.isEmpty()) {
             product.setOriginalPrice(Float.parseFloat(originalPriceStr.substring(1)));
             product.setSalePrice(Float.parseFloat(salePriceStr.substring(1)));
             product.setOnSale(true);
         }
 
+        //scrape sizes
         ArrayList<String> sizes = new ArrayList<>();
-
         Element sizeHTML = doc.getElementsByClass("swatches swatches-size js-swatches__size cf mb3 mb0-ns").first();
         Elements sizerepositories = sizeHTML.getElementsByClass("sizeanchor js-swatches__size-anchor");
         for (Element s: sizerepositories){
             String size = s.text();
             sizes.add(size);
-            /*
-            String availability = s.parent().attr("class");
-            if (!availability.equals(" unavailable")){
-                availableSizes.add(size);
-            }
-             */
         }
         product.setSizes(sizes);
-        //product.setAvailableSizes(availableSizes);
 
+        //scrape colors
         ArrayList<String> colors = new ArrayList<>();
         Elements colorrepositories = doc.getElementsByClass("swatchanchor");
         for (Element c: colorrepositories){
@@ -224,8 +179,7 @@ public class ProductService {
         }
         product.setColors(colors);
 
-        //save all images
-
+        //scrape images
         Elements imgs = doc.getElementsByClass("ar-product-images__image-media js-product-images__image-media lazyr lazy");
         for (Element el : imgs) {
             String src = el.absUrl("src");
@@ -234,7 +188,6 @@ public class ProductService {
         }
 
         product = productRepository.save(product);
-
         driver.close();
         return product;
     }

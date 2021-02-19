@@ -1,4 +1,6 @@
 
+import TrackingApp.Entities.Image;
+import TrackingApp.Entities.Product;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -13,6 +15,11 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import utils.MailUtil;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,46 +30,61 @@ public class tracking {
 
     public static void main (String[] args) throws InterruptedException {
 
+        String url = "https://www.aritzia.com/en/product/conan-pant/69829.html?dwvar_69829_color=15088";
         WebDriver driver = new PhantomJSDriver(new DesiredCapabilities());
-        driver.get("https://www.zara.com/ca/en/fleece-coat-p04360041.html?v1=78482745&v2=1718076");
-
-        String currentColor = driver.findElements(By.className("_colorName")).get(0).getText();
-
-        if (!currentColor.equals("PEARL GRAY".toUpperCase())){
-            Actions actions = new Actions(driver);
-            List<WebElement> colorElements = driver.findElements(By.className("_color-image"));
-            for (WebElement element: colorElements){
-                if (element.getAttribute("alt").equals("White")){
-                    actions.moveToElement(element).click().perform();
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                }
-            }
-        }
-
-        WebDriverWait wait = new WebDriverWait(driver, 5);
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("price")));// instead of id u can use cssSelector or xpath of ur element.
+        driver.get(url);
 
         String pageSource = driver.getPageSource();
         Document doc = Jsoup.parse(pageSource);
 
+        /*
+        //scrape current price
+        Element repository = doc.getElementsByClass("product-price").first();
+        double currentPrice = item.getProduct().getOriginalPrice();
+        String priceWithoutDiscountStr = repository.getElementsByClass("price-default").text();
+        String originalPriceStr = repository.getElementsByClass("price-standard").text();
+        String salePriceStr = repository.getElementsByClass("price-sales").text();
+        if (!originalPriceStr.isEmpty() && !salePriceStr.isEmpty()) {
+            currentPrice = Float.parseFloat(salePriceStr.substring(1));
+        }
+        */
 
-        Elements sizerepositories = doc.getElementsByClass("product-size");
+
+
+
+        //scrape sizes
+        Element sizeHTML = doc.getElementsByClass("swatches swatches-size js-swatches__size cf mb3 mb0-ns").first();
+        Elements sizerepositories = sizeHTML.getElementsByClass("sizeanchor js-swatches__size-anchor");
         for (Element s: sizerepositories){
-            String size = s.getElementsByClass("size-name").first().text();
-            String classes = s.attr("class");
-            if (Arrays.stream(classes.split(" ")).
-                    filter(str->str.equals("_disabled")).
-                    collect(Collectors.toList()).isEmpty()){
-                        if ("S".equals(size)){
-                            System.out.print(true);
-                        }
+            String size = s.text();
+            if (size.equals("12")){
+                String name = s.parent().className();
+
+                System.out.println(name);
             }
         }
 
+    }
+
+    private static Image getImage(String src) {
+        try {
+            URL url = new URL(src);
+            InputStream inputStream = url.openStream();
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            int read;
+            while ((read = inputStream.read()) != -1) {
+                byteArrayOutputStream.write(read);
+            }
+
+            byte[] imageData = byteArrayOutputStream.toByteArray();
+            Image img = new Image(imageData);
+            //Image savedImage = imageRepository.save(img);
+            inputStream.close();
+            byteArrayOutputStream.close();
+            return img;
+        }catch (IOException e){
+            System.out.println("Failed to download image.");
+            return null;
+        }
     }
 }
