@@ -138,70 +138,45 @@ public class ItemService {
         TrackResult result = new TrackResult();
         result.isAvailable = false;
         result.priceDrop = false;
-        /*
+
+        WebDriver driver = new PhantomJSDriver(new DesiredCapabilities());
+        driver.get(item.getProduct().getUrl());
+
         if (item.getProduct().getBrand().equals("ZARA")){
-            WebDriver driver = new PhantomJSDriver(new DesiredCapabilities());
-            driver.get(item.getProduct().getUrl());
-
-            String currentColor = driver.findElements(By.className("_colorName")).get(0).getText();
-
-            if (!currentColor.equals(item.getColor().toUpperCase())){
-                Actions actions = new Actions(driver);
-                List<WebElement> colorElements = driver.findElements(By.className("_color-image"));
-                for (WebElement element: colorElements){
-                    if (element.getAttribute("alt").equals("White")){
-                        actions.moveToElement(element).click().perform();
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        break;
-                    }
-                }
-            }
-
             WebDriverWait wait = new WebDriverWait(driver, 5);
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.className("price")));// instead of id u can use cssSelector or xpath of ur element.
-
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.className("price__amount")));
             String pageSource = driver.getPageSource();
             Document doc = Jsoup.parse(pageSource);
 
-            Elements sizerepositories = doc.getElementsByClass("product-size");
-            for (Element s: sizerepositories){
-                String size = s.getElementsByClass("size-name").first().text();
-                String classes = s.attr("class");
-                if (Arrays.stream(classes.split(" ")).
-                        filter(str->str.equals("_disabled")).
-                        collect(Collectors.toList()).isEmpty()){
-                    if (item.getSize().equals(size)){
-                        result.isAvailable = true;
+            // scrape size availability
+            Elements sizeElements = doc.getElementsByClass("product-size-info__name");
+            for (Element s: sizeElements){
+                String size = s.text();
+                if (size.equals(item.getSize())){
+                    Element sp = s.parent().parent().parent();
+                    driver.close();
+                    if (!sp.hasAttr("disabled")) {
+                        result.isAvailable=true;
                     }
                 }
             }
 
-            Elements repositories = doc.getElementsByClass("price");
-            Element repository = repositories.first();
-
-            String priceWithoutDiscountStr = repository.getElementsByClass("main-price").text();
-            String originalPriceStr = repository.getElementsByClass("line-through").text();
-            String salePriceStr = repository.getElementsByClass("sale").text();
-
-            if (!priceWithoutDiscountStr.isEmpty()) {
-                result.priceDrop = item.getAddedPrice()>Float.parseFloat(priceWithoutDiscountStr.split(" ")[0]);
+            //scrape current price
+            double currentPrice = item.getProduct().getOriginalPrice();
+            Elements priceElements = doc.getElementsByClass("price__amount");
+            String salePriceStr = priceElements.size()==2? priceElements.get(1).text():"";
+            boolean onSale = !salePriceStr.equals("");
+            if (onSale){
+                currentPrice = Float.parseFloat(salePriceStr.split(" ")[0]);
             }
-
-            if (!originalPriceStr.isEmpty() && !salePriceStr.isEmpty()) {
-                result.priceDrop = item.getAddedPrice()>Float.parseFloat(salePriceStr.split(" ")[0]);
+            if (currentPrice< item.getAddedPrice()){
+                result.priceDrop = true;
             }
         }
-         */
+
 
         //Aritzia
         if (item.getProduct().getBrand().equals("ARITZIA")) {
-            WebDriver driver = new PhantomJSDriver(new DesiredCapabilities());
-            driver.get(item.getProduct().getUrl());
-
             String pageSource = driver.getPageSource();
             Document doc = Jsoup.parse(pageSource);
 
@@ -221,7 +196,6 @@ public class ItemService {
             //scrape current price
             Element repository = doc.getElementsByClass("product-price").first();
             double currentPrice = item.getProduct().getOriginalPrice();
-            String priceWithoutDiscountStr = repository.getElementsByClass("price-default").text();
             String originalPriceStr = repository.getElementsByClass("price-standard").text();
             String salePriceStr = repository.getElementsByClass("price-sales").text();
             if (!originalPriceStr.isEmpty() && !salePriceStr.isEmpty()) {
@@ -231,6 +205,7 @@ public class ItemService {
                 result.priceDrop = true;
             }
         }
+        driver.close();
         return result;
     }
 
@@ -238,9 +213,29 @@ public class ItemService {
     private boolean getItemAvailability(Item item){
 
         //ZARA
-        if (item.getProduct().getBrand().equals("ZARA")){
+        if (item.getProduct().getBrand().equals("ZARA")) {
+            WebDriver driver = new PhantomJSDriver(new DesiredCapabilities());
+            driver.get(item.getProduct().getUrl());
 
+            String pageSource = driver.getPageSource();
+            Document doc = Jsoup.parse(pageSource);
+
+            // scrape size availability
+            Elements sizeElements = doc.getElementsByClass("product-size-info__name");
+            for (Element s: sizeElements){
+                String size = s.text();
+                if (size.equals(item.getSize())){
+                    Element sp = s.parent().parent().parent();
+                    driver.close();
+                    if (sp.hasAttr("disabled")) {
+                        return false;
+                    }else{
+                        return true;
+                    }
+                }
+            }
         }
+
 
         //Aritzia
         if (item.getProduct().getBrand().equals("ARITZIA")) {
@@ -257,6 +252,7 @@ public class ItemService {
                 String size = s.text();
                 if (size.equals(item.getSize())){
                     String status = s.parent().className();
+                    driver.close();
                     if (status.equals("unavailable")){
                         return false;
                     }else{
@@ -264,18 +260,6 @@ public class ItemService {
                     }
                 }
             }
-
-            /*
-            //scrape current price
-            Element repository = doc.getElementsByClass("product-price").first();
-            double currentPrice = item.getProduct().getOriginalPrice();
-            String priceWithoutDiscountStr = repository.getElementsByClass("price-default").text();
-            String originalPriceStr = repository.getElementsByClass("price-standard").text();
-            String salePriceStr = repository.getElementsByClass("price-sales").text();
-            if (!originalPriceStr.isEmpty() && !salePriceStr.isEmpty()) {
-                currentPrice = Float.parseFloat(salePriceStr.substring(1));
-            }
-            */
         }
 
         return false;
